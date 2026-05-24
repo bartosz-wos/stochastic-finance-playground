@@ -5,6 +5,8 @@
 #include <new>
 #include <numbers>
 #include <cmath>
+#include <numeric>
+#include <bit>
 
 namespace quant_math{
 
@@ -50,6 +52,22 @@ namespace quant_math{
     if(p == 0.0) return (k == 0) ? 1.0 : 0.0;
     if(p == 1.0) return (k == n) ? 1.0 : 0.0;
     return std::exp(approx_ln_factorial(n) - approx_ln_factorial(k) - approx_ln_factorial(n - k) + k * std::log(p) + (n - k) * std::log(1.0 - p));
+  }
+
+  constexpr double fast_exp(double x) noexcept{
+    if(x < -708.39) [[unlikely]] return 0.0;
+    if(x > 709.78) [[unlikely]] return std::numeric_limits<double>::infinity();
+
+    int64_t i = static_cast<int64_t>(6497320848556798.0 * x + 4607182418800017408.0);
+    return std::bit_cast<double>(i);
+  }
+
+  inline double approx_binomial_pmf_large(uint32_t n, uint32_t k, double p) noexcept{
+    if(k > n) [[unlikely]] return 0.0;
+    if(p == 0.0) return (k == 0) ? 1.0 : 0.0;
+    if(p == 1.0) return (k == n) ? 1.0 : 0.0;
+
+    return fast_exp(approx_ln_factorial(n) - approx_ln_factorial(k) - approx_ln_factorial(n - k) + k * std::log(p) + (n - k) * std::log(1.0 - p));
   }
 
   template <size_t maxN>
